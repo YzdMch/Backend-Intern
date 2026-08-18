@@ -1,0 +1,68 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: ewf-backend
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - .:/var/www
+
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ewf_system
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - ewf-network
+
+
+  postgres:
+    image: postgres:18
+
+    container_name: ewf-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ewf_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ewf_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - ewf-network
+
+
+networks:
+  ewf-network:
+
+
+volumes:
+  postgres_data:
